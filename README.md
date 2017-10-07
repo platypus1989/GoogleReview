@@ -1,3 +1,3 @@
 # Google Review of Restaurants
 
-<img src="images/icecream_wordcloud.png" width="500">
+<img src="images/icecream_wordcloud.png" width="300">
