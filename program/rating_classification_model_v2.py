@@ -58,14 +58,14 @@ for i, rating in enumerate(all_rating):
 
 feature_matrix = np.zeros([review_data.shape[0], len(all_rating)])
 
-
-X = np.zeros([review_data.shape[0],len(key_words)], dtype=bool)
-
-for i, word in enumerate(key_words):
-    for j, review in enumerate(review_data['review_text']):
-        if re.search(word,review.lower()):
-            X[j,i] = True
-            
+tic = time()
+for i, review in enumerate(review_data['review_text']):
+    for j in range(len(all_rating)):    
+        name_tokens = nltk.word_tokenize(review.decode('utf-8').lower())
+        feature_matrix[i,j] = sum(name_token in list(rating_keywords.iloc[:,j]) for name_token in name_tokens)
+toc = time() 
+toc - tic
+           
 y = review_data['review_rating'].astype('category')
 
 
@@ -86,6 +86,49 @@ classifiers = [
     GaussianNB(),
     QuadraticDiscriminantAnalysis()]
 
+X = feature_matrix
+X = StandardScaler().fit_transform(X)
+X_train, X_test, y_train, y_test = \
+    train_test_split(X, y, test_size=.4, random_state=42)
+
+
+for name, clf in zip(names, classifiers):
+        clf.fit(X_train, y_train)
+        score = clf.score(X_test, y_test)
+        print(score, name)
+
+#==============================================================================
+# 0.452991452991 Nearest Neighbors
+# 0.509615384615 Linear SVM
+# 0.530982905983 RBF SVM
+# 0.543803418803 Gaussian Process
+# 0.517094017094 Decision Tree
+# 0.510683760684 Random Forest
+# 0.521367521368 GBM
+# 0.513888888889 Neural Net
+# 0.519230769231 AdaBoost
+# 0.478632478632 Naive Bayes
+# 0.113247863248 QDA
+#==============================================================================
+
+
+good_words = ['great', 'good', 'nice', 'friendly', 'best', 'delicious', 'really',
+              'love', 'excellent', 'well', 'tasty', 'amazing', 'perfect', 'happy',
+              'recommend', 'fresh']
+neutral_words = ['staff', 'always', 'also', 'even', 'quality', 'everything','family',
+                 'clean', 'decent', 'price', 'pretty', 'will','highly','waiter']
+bad_words = ['bad', 'waited', 'never','worst']
+
+key_words = good_words + neutral_words + bad_words
+
+X1 = np.zeros([review_data.shape[0],len(key_words)], dtype=bool)
+
+for i, word in enumerate(key_words):
+    for j, review in enumerate(review_data['review_text']):
+        if re.search(word,review.lower()):
+            X1[j,i] = True
+
+X = np.concatenate([feature_matrix, X1], axis=1)
 
 X = StandardScaler().fit_transform(X)
 X_train, X_test, y_train, y_test = \
@@ -98,16 +141,15 @@ for name, clf in zip(names, classifiers):
         print(score, name)
 
 #==============================================================================
-# 0.450854700855 Nearest Neighbors
-# 0.532051282051 Linear SVM
-# 0.518162393162 RBF SVM
-# 0.554487179487 Gaussian Process
-# 0.498931623932 Decision Tree
-# 0.487179487179 Random Forest
-# 0.561965811966 GBM
-# 0.569444444444 Neural Net
-# 0.55235042735 AdaBoost
-# 0.247863247863 Naive Bayes
-# 0.239316239316 QDA
+# 0.46688034188 Nearest Neighbors
+# 0.568376068376 Linear SVM
+# 0.501068376068 RBF SVM
+# 0.113247863248 Gaussian Process
+# 0.525641025641 Decision Tree
+# 0.491452991453 Random Forest
+# 0.582264957265 GBM
+# 0.575854700855 Neural Net
+# 0.550213675214 AdaBoost
+# 0.255341880342 Naive Bayes
+# 0.223290598291 QDA
 #==============================================================================
-
